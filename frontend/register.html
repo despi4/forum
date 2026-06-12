@@ -1,0 +1,56 @@
+{{define "register"}}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Register</title>
+    <meta charset="utf-8">
+</head>
+<body>
+    <h1>Register</h1>
+
+    <form id="register">
+        <label for="username">Username:</label><br>
+        <input type="text" id="username" name="username"><br>
+
+        <label for="email">Email:</label><br>
+        <input type="email" id="email" name="email"><br>
+
+        <label for="password">Password:</label><br>
+        <input type="password" id="password" name="password"><br>
+
+        <button type="submit">Register</button>
+    </form>
+
+    <div id="result"></div>
+
+    <script>
+    document.getElementById('register').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const userData = {
+            username: document.getElementById('username').value.trim(),
+            email: document.getElementById('email').value.trim(),
+            password: document.getElementById('password').value
+        };
+
+        const response = await fetch('/auth/register', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(userData)
+        });
+
+        const result = await response.json();
+
+        const resDiv = document.getElementById('result');
+
+        if (response.ok) {
+            resDiv.innerHTML = `<p style="color:green">Регистрация успешна!</p>`;
+            window.location.href = "/";
+        } else {
+            resDiv.innerHTML = `<p style="color:red">Ошибка: ${result.error}</p>`;
+        }
+    });
+    </script>
+</body>
+</html>
+{{end}}

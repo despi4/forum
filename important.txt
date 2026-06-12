@@ -1,0 +1,160 @@
+Обычно эти ошибки используют так:
+
+```go
+ErrUserNotFound       = errors.New("user not found")
+ErrInvalidCredentials = errors.New("invalid credentials")
+ErrUserAlreadyExists  = errors.New("user already exists")
+ErrUnauthorized       = errors.New("unauthorized")
+ErrForbidden          = errors.New("forbidden")
+```
+
+### `ErrUserNotFound`
+
+Когда пользователя действительно нет в системе.
+
+Примеры:
+
+* поиск пользователя по ID/email не дал результата
+* профиль удалён
+* обращение к несуществующему пользователю
+
+```go
+user, err := repo.GetByEmail(email)
+if err == sql.ErrNoRows {
+    return ErrUserNotFound
+}
+```
+
+HTTP обычно:
+
+* `404 Not Found`
+
+---
+
+### `ErrInvalidCredentials`
+
+Когда логин/пароль неверны, но ты не раскрываешь, существует ли пользователь.
+
+Используется ТОЛЬКО для аутентификации.
+
+Примеры:
+
+* неверный пароль
+* email не найден при логине
+* токен логина невалиден
+
+```go
+user, err := repo.GetByEmail(email)
+if err != nil {
+    return ErrInvalidCredentials
+}
+
+if !CheckPassword(password, user.PasswordHash) {
+    return ErrInvalidCredentials
+}
+```
+
+HTTP обычно:
+
+* `401 Unauthorized`
+
+Важно:
+Для login endpoint лучше всегда возвращать одну ошибку:
+
+```go
+ErrInvalidCredentials
+```
+
+а не `ErrUserNotFound`, чтобы не давать возможность перечислять пользователей.
+
+---
+
+### `ErrUserAlreadyExists`
+
+Когда создаётся пользователь с уже занятым уникальным полем.
+
+Примеры:
+
+* email уже зарегистрирован
+* username занят
+
+```go
+exists, _ := repo.ExistsByEmail(email)
+if exists {
+    return ErrUserAlreadyExists
+}
+```
+
+HTTP обычно:
+
+* `409 Conflict`
+
+---
+
+### `ErrUnauthorized`
+
+Когда пользователь не аутентифицирован.
+
+То есть:
+
+* нет access token
+* token протух
+* token невалидный
+* сессия отсутствует
+
+Примеры:
+
+```go
+token := ExtractToken(r)
+if token == "" {
+    return ErrUnauthorized
+}
+```
+
+HTTP:
+
+* `401 Unauthorized`
+
+Разница с `ErrInvalidCredentials`:
+
+* `ErrInvalidCredentials` — ошибка входа
+* `ErrUnauthorized` — пользователь вообще не авторизован для текущего запроса
+
+---
+
+### `ErrForbidden`
+
+Когда пользователь залогинен, но прав недостаточно.
+
+Примеры:
+
+* обычный user пытается зайти в admin endpoint
+* пользователь пытается удалить чужой ресурс
+
+```go
+if resource.OwnerID != currentUser.ID {
+    return ErrForbidden
+}
+```
+
+HTTP:
+
+* `403 Forbidden`
+
+---
+
+Коротко:
+
+| Ошибка                  | Когда                          |
+| ----------------------- | ------------------------------ |
+| `ErrUserNotFound`       | Пользователь реально не найден |
+| `ErrInvalidCredentials` | Неверный логин/пароль          |
+| `ErrUserAlreadyExists`  | Пользователь уже существует    |
+| `ErrUnauthorized`       | Не залогинен / токен невалиден |
+| `ErrForbidden`          | Залогинен, но нет прав         |
+
+Очень распространённая схема:
+
+* login → `ErrInvalidCredentials`
+* middleware auth → `ErrUnauthorized`
+* ACL/roles check → `ErrForbidden`
