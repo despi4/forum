@@ -17,7 +17,7 @@ import (
 	"01.tomorrow-school.ai/git/amadiuly/forum/utils"
 )
 
-const pattern = "frontend/*.html"
+const pattern = "templates/*.html"
 
 func main() {
 	if err := utils.Loadenv(".env"); err != nil {
