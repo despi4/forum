@@ -2,9 +2,10 @@ package usersvc
 
 import (
 	"context"
+	"net/mail"
+	"strings"
 
 	domain "01.tomorrow-school.ai/git/amadiuly/forum/internal/domain/user"
-	"01.tomorrow-school.ai/git/amadiuly/forum/internal/service"
 	"github.com/google/uuid"
 )
 
@@ -25,16 +26,42 @@ func (s *UserService) GetMe(ctx context.Context, id uuid.UUID) (*domain.User, er
 		return nil, err
 	}
 
-	if err := service.ValidateData(user); err != nil {
-		return nil, err
-	}
-
 	return user, nil
 }
 
 func (s *UserService) UpdateMe(ctx context.Context, id uuid.UUID, updatedUser domain.UserUpdate) error {
-	if err := service.ValidateData(&updatedUser); err != nil {
+	if updatedUser.Username != nil {
+		trimmed := strings.TrimSpace(*updatedUser.Username)
+		if trimmed == "" {
+			return domain.ErrInvalidArgument
+		}
+
+		updatedUser.Username = Ptr(*updatedUser.Username)
+	}
+
+	if updatedUser.Email != nil {
+		trimmed := strings.TrimSpace(strings.ToLower(*updatedUser.Email))
+		if trimmed == "" {
+			return domain.ErrInvalidArgument
+		}
+
+		_, err := mail.ParseAddress(trimmed)
+		if err != nil {
+			return domain.ErrInvalidArgument
+		}
+
+		updatedUser.Email = Ptr(trimmed)
+	}
+
+	user, err := s.repo.GetByID(ctx, id)
+	if err != nil {
 		return err
+	}
+
+	updatedUser.Role = Ptr(user.Role)
+
+	if updatedUser.Visibility == nil {
+		updatedUser.Visibility = Ptr(user.Visibility)
 	}
 
 	return s.repo.Update(ctx, updatedUser, id)
@@ -51,8 +78,29 @@ func (s *UserService) DeleteUser(ctx context.Context, actor, target uuid.UUID) e
 }
 
 func (s *UserService) ListUsers(ctx context.Context, params domain.UserFilter) ([]domain.User, error) {
-	if err := service.ValidateData(&params); err != nil {
-		return nil, err
+	if params.Search != nil {
+		trimmed := strings.TrimSpace(*params.Search)
+		if trimmed == "" {
+			params.Search = nil
+		} else {
+			params.Search = Ptr(trimmed)
+		}
+	}
+
+	if params.Role == nil {
+		params.Role = Ptr(domain.RoleUser)
+	}
+
+	if params.Limit <= 0 {
+		params.Limit = 10
+	}
+
+	if params.Limit > 100 {
+		params.Limit = 100
+	}
+
+	if params.Offset < 0 {
+		params.Offset = 0
 	}
 
 	return s.repo.List(ctx, params)
@@ -83,4 +131,8 @@ func (s *UserService) requireAdmin(ctx context.Context, actor uuid.UUID) error {
 	}
 
 	return nil
+}
+
+func Ptr[T any](v T) *T {
+	return &v
 }

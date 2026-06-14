@@ -2,11 +2,14 @@ package authsvc
 
 import (
 	"context"
+	"fmt"
+	"net/mail"
+	"strings"
 	"time"
 
 	domain "01.tomorrow-school.ai/git/amadiuly/forum/internal/domain/auth"
 	user "01.tomorrow-school.ai/git/amadiuly/forum/internal/domain/user"
-	"01.tomorrow-school.ai/git/amadiuly/forum/internal/service"
+	usersvc "01.tomorrow-school.ai/git/amadiuly/forum/internal/service/user"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -31,11 +34,15 @@ func NewAuthService(sessionRepo domain.SessionRepository, userRepo user.UserRepo
 }
 
 func (s *AuthService) Register(ctx context.Context, userInput *domain.UserInput) (domain.Session, error) {
-	if err := service.ValidateData(userInput); err != nil {
-		return domain.Session{}, user.ErrInvalidCredentials
-	}
+	if userInput.Username != nil && userInput.Email != nil {
+		userInput.Username = usersvc.Ptr(strings.TrimSpace(*userInput.Username))
+		userInput.Email = usersvc.Ptr(strings.TrimSpace(strings.ToLower(*userInput.Email)))
 
-	if userInput.Username == nil || userInput.Email == nil {
+		err := s.validInput(userInput.Username, userInput.Email, userInput.Password)
+		if err != nil {
+			return domain.Session{}, err
+		}
+	} else {
 		return domain.Session{}, user.ErrInvalidCredentials
 	}
 
@@ -71,7 +78,21 @@ func (s *AuthService) Register(ctx context.Context, userInput *domain.UserInput)
 }
 
 func (s *AuthService) Login(ctx context.Context, userInput *domain.UserInput) (domain.Session, error) {
-	if err := service.ValidateData(userInput); err != nil {
+	if userInput.Username == nil && userInput.Email != nil {
+		userInput.Email = usersvc.Ptr(strings.TrimSpace(strings.ToLower(*userInput.Email)))
+
+		err := s.validInput(userInput.Username, userInput.Email, userInput.Password)
+		if err != nil {
+			return domain.Session{}, err
+		}
+	} else if userInput.Username != nil && userInput.Email == nil {
+		userInput.Username = usersvc.Ptr(strings.TrimSpace(*userInput.Username))
+
+		err := s.validInput(userInput.Username, userInput.Email, userInput.Password)
+		if err != nil {
+			return domain.Session{}, err
+		}
+	} else {
 		return domain.Session{}, user.ErrInvalidCredentials
 	}
 
@@ -158,6 +179,31 @@ func (s *AuthService) ChangePassword(ctx context.Context, userID uuid.UUID, oldP
 }
 
 // ============== Private helper methods ==============
+
+func (s *AuthService) validInput(username, email *string, password string) error {
+	if email != nil {
+		_, err := mail.ParseAddress(*email)
+		if err != nil {
+			return user.ErrInvalidArgument
+		}
+
+		if len(*email) > 50 || len(*email) < 5 {
+			return fmt.Errorf("email must contain at least 6 and not more than 50 characters: %w", user.ErrInvalidArgument)
+		}
+	}
+
+	if username != nil {
+		if len(*username) > 35 || len(*username) < 2 {
+			return fmt.Errorf("username must contain at least 3 and not more than 35 characters: %w", user.ErrInvalidArgument)
+		}
+	}
+
+	if len(password) > 5 || len(password) < 50 {
+		return fmt.Errorf("passwor must contain at lleast 6 and not more than 50 characters: %w", user.ErrInvalidArgument)
+	}
+
+	return nil
+}
 
 func (s *AuthService) findUserByEmailOrUsername(ctx context.Context, userInput *domain.UserInput) (*user.User, error) {
 	if userInput.Email != nil {
