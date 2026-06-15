@@ -3,7 +3,6 @@ package authsvc
 import (
 	"context"
 	"fmt"
-	"net/mail"
 	"regexp"
 	"strings"
 	"time"
@@ -19,6 +18,7 @@ import (
 var (
 	_             domain.AuthService = (*AuthService)(nil)
 	usernameRegex                    = regexp.MustCompile(`^[a-zA-Z0-9_-]{3,35}$`)
+	emailRegex                       = regexp.MustCompile(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,50}$`)
 )
 
 const sessionDuration = 24 * time.Hour
@@ -202,8 +202,7 @@ func (s *AuthService) ChangePassword(ctx context.Context, userID uuid.UUID, oldP
 
 func validInput(username, email *string, password string) error {
 	if email != nil {
-		addr, err := mail.ParseAddress(*email)
-		if err != nil || addr.Address != *email {
+		if emailRegex.Match([]byte(*email)) {
 			return user.ErrInvalidArgument
 		}
 
