@@ -64,6 +64,8 @@ func (s *UserService) UpdateMe(ctx context.Context, id uuid.UUID, updatedUser do
 		updatedUser.Visibility = Ptr(user.Visibility)
 	}
 
+	updatedUser.PasswordHash = &user.PasswordHash
+
 	return s.repo.Update(ctx, updatedUser, id)
 }
 

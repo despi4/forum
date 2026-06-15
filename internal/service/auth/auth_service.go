@@ -152,6 +152,10 @@ func (s *AuthService) ChangePassword(ctx context.Context, userID uuid.UUID, oldP
 		return err
 	}
 
+	if err := s.validInput(nil, nil, newPassword); err != nil {
+		return err
+	}
+
 	if !s.comparePassword(foundUser.PasswordHash, oldPassword) {
 		return user.ErrInvalidCredentials
 	}
@@ -187,18 +191,18 @@ func (s *AuthService) validInput(username, email *string, password string) error
 			return user.ErrInvalidArgument
 		}
 
-		if len(*email) > 50 || len(*email) < 5 {
+		if len(*email) > 50 || len(*email) < 6 {
 			return fmt.Errorf("email must contain at least 6 and not more than 50 characters: %w", user.ErrInvalidArgument)
 		}
 	}
 
 	if username != nil {
-		if len(*username) > 35 || len(*username) < 2 {
+		if len(*username) > 35 || len(*username) < 3 {
 			return fmt.Errorf("username must contain at least 3 and not more than 35 characters: %w", user.ErrInvalidArgument)
 		}
 	}
 
-	if len(password) > 5 || len(password) < 50 {
+	if len(password) < 6 || len(password) > 50 {
 		return fmt.Errorf("passwor must contain at lleast 6 and not more than 50 characters: %w", user.ErrInvalidArgument)
 	}
 

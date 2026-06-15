@@ -37,6 +37,7 @@ type UserUpdate struct {
 	Email        *string
 	Role         *Role
 	Visibility   *Visibility
+	PasswordHash *PasswordHash
 }
 
 type UserFilter struct {

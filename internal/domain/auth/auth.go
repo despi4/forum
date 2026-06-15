@@ -19,7 +19,7 @@ type UserInput struct {
 	Username *string
 	Email    *string
 	Password string
-}
+} 
 
 var (
 	ErrSessionNotFound      = errors.New("session not found")
