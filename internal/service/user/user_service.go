@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	domain "01.tomorrow-school.ai/git/amadiuly/forum/internal/domain/user"
+	"01.tomorrow-school.ai/git/amadiuly/forum/internal/service"
 	"github.com/google/uuid"
 )
 
@@ -31,12 +32,12 @@ func (s *UserService) GetMe(ctx context.Context, id uuid.UUID) (*domain.User, er
 
 func (s *UserService) UpdateMe(ctx context.Context, id uuid.UUID, updatedUser domain.UserUpdate) error {
 	if updatedUser.Username != nil {
-		trimmed := strings.TrimSpace(*updatedUser.Username)
+		trimmed := strings.ToLower(strings.TrimSpace(*updatedUser.Username))
 		if trimmed == "" {
 			return domain.ErrInvalidArgument
 		}
 
-		updatedUser.Username = Ptr(*updatedUser.Username)
+		updatedUser.Username = service.Ptr(*updatedUser.Username)
 	}
 
 	if updatedUser.Email != nil {
@@ -50,7 +51,7 @@ func (s *UserService) UpdateMe(ctx context.Context, id uuid.UUID, updatedUser do
 			return domain.ErrInvalidArgument
 		}
 
-		updatedUser.Email = Ptr(trimmed)
+		updatedUser.Email = service.Ptr(trimmed)
 	}
 
 	user, err := s.repo.GetByID(ctx, id)
@@ -58,10 +59,10 @@ func (s *UserService) UpdateMe(ctx context.Context, id uuid.UUID, updatedUser do
 		return err
 	}
 
-	updatedUser.Role = Ptr(user.Role)
+	updatedUser.Role = service.Ptr(user.Role)
 
 	if updatedUser.Visibility == nil {
-		updatedUser.Visibility = Ptr(user.Visibility)
+		updatedUser.Visibility = service.Ptr(user.Visibility)
 	}
 
 	updatedUser.PasswordHash = &user.PasswordHash
@@ -85,12 +86,12 @@ func (s *UserService) ListUsers(ctx context.Context, params domain.UserFilter) (
 		if trimmed == "" {
 			params.Search = nil
 		} else {
-			params.Search = Ptr(trimmed)
+			params.Search = service.Ptr(trimmed)
 		}
 	}
 
 	if params.Role == nil {
-		params.Role = Ptr(domain.RoleUser)
+		params.Role = service.Ptr(domain.RoleUser)
 	}
 
 	if params.Limit <= 0 {
@@ -133,8 +134,4 @@ func (s *UserService) requireAdmin(ctx context.Context, actor uuid.UUID) error {
 	}
 
 	return nil
-}
-
-func Ptr[T any](v T) *T {
-	return &v
 }

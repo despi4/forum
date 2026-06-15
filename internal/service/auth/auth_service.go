@@ -4,19 +4,21 @@ import (
 	"context"
 	"fmt"
 	"net/mail"
+	"regexp"
 	"strings"
 	"time"
 
 	domain "01.tomorrow-school.ai/git/amadiuly/forum/internal/domain/auth"
 	user "01.tomorrow-school.ai/git/amadiuly/forum/internal/domain/user"
-	usersvc "01.tomorrow-school.ai/git/amadiuly/forum/internal/service/user"
+	"01.tomorrow-school.ai/git/amadiuly/forum/internal/service"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
 var (
-	_ domain.AuthService = (*AuthService)(nil)
+	_             domain.AuthService = (*AuthService)(nil)
+	usernameRegex                    = regexp.MustCompile(`^[a-zA-Z0-9_-]{3,35}$`)
 )
 
 const sessionDuration = 24 * time.Hour
@@ -34,19 +36,23 @@ func NewAuthService(sessionRepo domain.SessionRepository, userRepo user.UserRepo
 }
 
 func (s *AuthService) Register(ctx context.Context, userInput *domain.UserInput) (domain.Session, error) {
-	if userInput.Username != nil && userInput.Email != nil {
-		userInput.Username = usersvc.Ptr(strings.TrimSpace(*userInput.Username))
-		userInput.Email = usersvc.Ptr(strings.TrimSpace(strings.ToLower(*userInput.Email)))
+	if userInput == nil {
+		return domain.Session{}, user.ErrInvalidArgument
+	}
 
-		err := s.validInput(userInput.Username, userInput.Email, userInput.Password)
+	if userInput.Username != nil && userInput.Email != nil {
+		userInput.Username = service.Ptr(strings.TrimSpace(strings.ToLower(*userInput.Username)))
+		userInput.Email = service.Ptr(strings.TrimSpace(strings.ToLower(*userInput.Email)))
+
+		err := validInput(userInput.Username, userInput.Email, userInput.Password)
 		if err != nil {
 			return domain.Session{}, err
 		}
 	} else {
-		return domain.Session{}, user.ErrInvalidCredentials
+		return domain.Session{}, user.ErrInvalidArgument
 	}
 
-	passwordHash, err := s.generateHash(userInput.Password)
+	passwordHash, err := generateHash(userInput.Password)
 	if err != nil {
 		return domain.Session{}, err
 	}
@@ -62,7 +68,7 @@ func (s *AuthService) Register(ctx context.Context, userInput *domain.UserInput)
 		return domain.Session{}, err
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 
 	session := domain.Session{
 		UserID:     createdUser.ID,
@@ -71,6 +77,8 @@ func (s *AuthService) Register(ctx context.Context, userInput *domain.UserInput)
 	}
 
 	if err := s.sessionRepo.Create(ctx, &session); err != nil {
+		s.userRepo.Delete(ctx, createdUser.ID)
+
 		return domain.Session{}, err
 	}
 
@@ -78,19 +86,23 @@ func (s *AuthService) Register(ctx context.Context, userInput *domain.UserInput)
 }
 
 func (s *AuthService) Login(ctx context.Context, userInput *domain.UserInput) (domain.Session, error) {
-	if userInput.Username == nil && userInput.Email != nil {
-		userInput.Email = usersvc.Ptr(strings.TrimSpace(strings.ToLower(*userInput.Email)))
+	if userInput == nil {
+		return domain.Session{}, user.ErrInvalidCredentials
+	}
 
-		err := s.validInput(userInput.Username, userInput.Email, userInput.Password)
+	if userInput.Username == nil && userInput.Email != nil {
+		userInput.Email = service.Ptr(strings.TrimSpace(strings.ToLower(*userInput.Email)))
+
+		err := validInput(userInput.Username, userInput.Email, userInput.Password)
 		if err != nil {
-			return domain.Session{}, err
+			return domain.Session{}, user.ErrInvalidCredentials
 		}
 	} else if userInput.Username != nil && userInput.Email == nil {
-		userInput.Username = usersvc.Ptr(strings.TrimSpace(*userInput.Username))
+		userInput.Username = service.Ptr(strings.TrimSpace(strings.ToLower(*userInput.Username)))
 
-		err := s.validInput(userInput.Username, userInput.Email, userInput.Password)
+		err := validInput(userInput.Username, userInput.Email, userInput.Password)
 		if err != nil {
-			return domain.Session{}, err
+			return domain.Session{}, user.ErrInvalidCredentials
 		}
 	} else {
 		return domain.Session{}, user.ErrInvalidCredentials
@@ -101,11 +113,11 @@ func (s *AuthService) Login(ctx context.Context, userInput *domain.UserInput) (d
 		return domain.Session{}, user.ErrInvalidCredentials
 	}
 
-	if !s.comparePassword(foundUser.PasswordHash, userInput.Password) {
+	if !comparePassword(foundUser.PasswordHash, userInput.Password) {
 		return domain.Session{}, user.ErrInvalidCredentials
 	}
 
-	now := time.Now()
+	now := time.Now().UTC()
 
 	session := domain.Session{
 		UserID:     foundUser.ID,
@@ -130,7 +142,11 @@ func (s *AuthService) ValidateSession(ctx context.Context, sessionID uuid.UUID) 
 		return domain.Session{}, err
 	}
 
-	now := time.Now()
+	if session == nil {
+		return domain.Session{}, domain.ErrSessionNotFound
+	}
+
+	now := time.Now().UTC()
 
 	if !session.ExpiresAt.After(now) {
 		_ = s.sessionRepo.DeleteByID(ctx, sessionID)
@@ -152,15 +168,15 @@ func (s *AuthService) ChangePassword(ctx context.Context, userID uuid.UUID, oldP
 		return err
 	}
 
-	if err := s.validInput(nil, nil, newPassword); err != nil {
+	if err := validInput(nil, nil, newPassword); err != nil {
 		return err
 	}
 
-	if !s.comparePassword(foundUser.PasswordHash, oldPassword) {
+	if !comparePassword(foundUser.PasswordHash, oldPassword) {
 		return user.ErrInvalidCredentials
 	}
 
-	passwordHash, err := s.generateHash(newPassword)
+	passwordHash, err := generateHash(newPassword)
 	if err != nil {
 		return err
 	}
@@ -184,10 +200,10 @@ func (s *AuthService) ChangePassword(ctx context.Context, userID uuid.UUID, oldP
 
 // ============== Private helper methods ==============
 
-func (s *AuthService) validInput(username, email *string, password string) error {
+func validInput(username, email *string, password string) error {
 	if email != nil {
-		_, err := mail.ParseAddress(*email)
-		if err != nil {
+		addr, err := mail.ParseAddress(*email)
+		if err != nil || addr.Address != *email {
 			return user.ErrInvalidArgument
 		}
 
@@ -197,13 +213,19 @@ func (s *AuthService) validInput(username, email *string, password string) error
 	}
 
 	if username != nil {
-		if len(*username) > 35 || len(*username) < 3 {
-			return fmt.Errorf("username must contain at least 3 and not more than 35 characters: %w", user.ErrInvalidArgument)
+		if !usernameRegex.MatchString(*username) {
+			return fmt.Errorf("username must be 3-35 chars and contain only A-Z, a-z, 0-9, _ and -: %w", user.ErrInvalidArgument)
 		}
 	}
 
+	trimmedPassword := strings.TrimSpace(password)
+
+	if trimmedPassword == "" {
+		return user.ErrInvalidArgument
+	}
+
 	if len(password) < 6 || len(password) > 50 {
-		return fmt.Errorf("passwor must contain at lleast 6 and not more than 50 characters: %w", user.ErrInvalidArgument)
+		return fmt.Errorf("password must contain at least 6 and not more than 50 characters: %w", user.ErrInvalidArgument)
 	}
 
 	return nil
@@ -221,7 +243,7 @@ func (s *AuthService) findUserByEmailOrUsername(ctx context.Context, userInput *
 	return nil, user.ErrInvalidCredentials
 }
 
-func (s *AuthService) generateHash(password string) (string, error) {
+func generateHash(password string) (string, error) {
 	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 	if err != nil {
 		return "", err
@@ -230,7 +252,7 @@ func (s *AuthService) generateHash(password string) (string, error) {
 	return string(hash), nil
 }
 
-func (s *AuthService) comparePassword(hash user.PasswordHash, password string) bool {
+func comparePassword(hash user.PasswordHash, password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 	return err == nil
 }
