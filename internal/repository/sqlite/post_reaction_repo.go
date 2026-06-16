@@ -23,7 +23,7 @@ func NewPostReactionRepo(db *db.ConnDB) *PostReactionRepo {
 
 var _ domain.PostReactionRepository = (*PostReactionRepo)(nil)
 
-func (r *PostReactionRepo) Create(ctx context.Context, reaction *domain.PostReaction) error {
+func (r *PostReactionRepo) Set(ctx context.Context, reaction *domain.PostReaction) error {
 	db := r.db.GetDB()
 
 	query := `

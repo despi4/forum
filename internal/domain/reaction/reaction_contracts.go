@@ -7,7 +7,7 @@ import (
 )
 
 type PostReactionRepository interface {
-	Create(ctx context.Context, reaction *PostReaction) error
+	Set(ctx context.Context, reaction *PostReaction) error
 	GetByUserAndPost(ctx context.Context, userID, postID uuid.UUID) (*PostReaction, error)
 	Update(ctx context.Context, reactionID uuid.UUID, reactionType ReactionType) error
 	Delete(ctx context.Context, reactionID uuid.UUID) error
@@ -15,7 +15,7 @@ type PostReactionRepository interface {
 }
 
 type CommentReactionRepository interface {
-	Create(ctx context.Context, reaction *CommentReaction) error
+	Set(ctx context.Context, reaction *CommentReaction) error
 	GetByUserAndComment(ctx context.Context, userID, commentID uuid.UUID) (*CommentReaction, error)
 	Update(ctx context.Context, reactionID uuid.UUID, reactionType ReactionType) error
 	Delete(ctx context.Context, reactionID uuid.UUID) error
@@ -31,7 +31,7 @@ type PostReactionService interface {
 
 type CommentReactionService interface {
 	SetCommentReaction(ctx context.Context, reactionType ReactionType, userID, commentID uuid.UUID) error
-	GetCommentReactionByID(ctx context.Context, userID, commentID uuid.UUID) (*CommentReaction, error)
+	GetCommentReaction(ctx context.Context, userID, commentID uuid.UUID) (*CommentReaction, error)
 	DeleteCommentReaction(ctx context.Context, userID, commentID uuid.UUID) error
-	ListCommentReactions(ctx context.Context, commentID uuid.UUID) error
+	CountCommentReactions(ctx context.Context, commentID uuid.UUID) (*ReactionsCount, error)
 }

@@ -38,4 +38,6 @@ type ReactionsCount struct {
 var (
 	ErrReactionAlreadyExists error = errors.New("reaction already exists")
 	ErrReactionNotFound      error = errors.New("reaction not found")
+	ErrInvalidArgument       error = errors.New("invalid input")
+	ErrForbidden error = errors.New("forbidden")
 )
