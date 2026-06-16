@@ -48,3 +48,5 @@ type CreatePost struct {
 }
 
 var ErrPostNotFound = errors.New("post not found")
+var ErrInvalidArgument = errors.New("invalid argument")
+var ErrForbidden = errors.New("forbidden")

@@ -15,5 +15,6 @@ type Category struct {
 
 var (
 	ErrCategoryNotFound error = errors.New("category not found")
-	ErrCategoryExists error = errors.New("category exists")
+	ErrCategoryExists   error = errors.New("category exists")
+	ErrInvalidArgument  error = errors.New("invalid argument")
 )

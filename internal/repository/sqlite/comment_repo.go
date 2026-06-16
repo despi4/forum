@@ -234,7 +234,7 @@ func buildListCommentsByPostIDQuery(postID uuid.UUID, filter domain.CommentFilte
 	sb.WriteString(`
 		group by c.id, c.user_id, c.post_id, c.content, c.created_at, c.updated_at
 	`)
-	sb.WriteString(buildCommentOrderBy(filter.CommentSort))
+	sb.WriteString(buildCommentOrderBy(*filter.CommentSort))
 	sb.WriteString(` limit ? offset ?;`)
 
 	args := append(q.WhereArgs, filter.Limit, filter.Offset)

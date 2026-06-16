@@ -52,6 +52,10 @@ func (s *CategoryService) CreateCategory(ctx context.Context, categoryName strin
 func (s *CategoryService) UpdateCategory(ctx context.Context, categoryName string, categoryID uuid.UUID) error {
 	categoryName = service.Capitalize(strings.TrimSpace(categoryName))
 
+	if isNil := service.CheckUUID(categoryID); !isNil {
+		return domain.ErrInvalidArgument
+	}
+
 	err := s.categoryRepo.Update(ctx, categoryName, categoryID)
 	if err != nil {
 		return err
@@ -61,6 +65,10 @@ func (s *CategoryService) UpdateCategory(ctx context.Context, categoryName strin
 }
 
 func (s *CategoryService) DeleteCategory(ctx context.Context, id uuid.UUID) error {
+	if isNil := service.CheckUUID(id); !isNil {
+		return domain.ErrInvalidArgument
+	}
+
 	err := s.categoryRepo.Delete(ctx, id)
 	if err != nil {
 		return err

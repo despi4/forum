@@ -2,6 +2,8 @@ package service
 
 import (
 	"strings"
+
+	"github.com/google/uuid"
 )
 
 func Ptr[T any](v T) *T {
@@ -18,4 +20,16 @@ func Capitalize(something string) string {
 	}
 
 	return string(runes)
+}
+
+func CheckUUID(IDs ...uuid.UUID) bool {
+	length := len(IDs)
+
+	for i := 0; i < length; i++ {
+		if IDs[i] == uuid.Nil {
+			return false
+		}
+	}
+
+	return true
 }

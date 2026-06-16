@@ -33,7 +33,9 @@ const (
 type CommentFilter struct {
 	Offset      int
 	Limit       int
-	CommentSort CommentSort
+	CommentSort *CommentSort
 }
 
 var ErrCommentNotFound error = errors.New("comment not found")
+var ErrInvalidArgument error = errors.New("invalid argument")
+var ErrForbidden error = errors.New("forbidden")

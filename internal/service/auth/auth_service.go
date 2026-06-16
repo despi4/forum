@@ -99,6 +99,10 @@ func (s *AuthService) Login(ctx context.Context, userInput *domain.UserInput) (d
 		return domain.Session{}, user.ErrInvalidCredentials
 	}
 
+	if foundUser == nil {
+		return domain.Session{}, domain.ErrSessionNotFound
+	}
+
 	if !comparePassword(foundUser.PasswordHash, userInput.Password) {
 		return domain.Session{}, user.ErrInvalidCredentials
 	}
