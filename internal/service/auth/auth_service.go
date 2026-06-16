@@ -63,22 +63,8 @@ func (s *AuthService) Register(ctx context.Context, userInput *domain.UserInput)
 		PasswordHash: user.PasswordHash(passwordHash),
 	}
 
-	createdUser, err := s.userRepo.Create(ctx, &registerInput)
+	session, err := s.sessionRepo.CreateUserWithSession(ctx, sessionDuration, &registerInput, s.userRepo)
 	if err != nil {
-		return domain.Session{}, err
-	}
-
-	now := time.Now().UTC()
-
-	session := domain.Session{
-		UserID:     createdUser.ID,
-		LastSeenAt: now,
-		ExpiresAt:  now.Add(sessionDuration),
-	}
-
-	if err := s.sessionRepo.Create(ctx, &session); err != nil {
-		s.userRepo.Delete(ctx, createdUser.ID)
-
 		return domain.Session{}, err
 	}
 
@@ -125,7 +111,7 @@ func (s *AuthService) Login(ctx context.Context, userInput *domain.UserInput) (d
 		ExpiresAt:  now.Add(sessionDuration),
 	}
 
-	if err := s.sessionRepo.Create(ctx, &session); err != nil {
+	if err := s.sessionRepo.Create(ctx, &session, nil); err != nil {
 		return domain.Session{}, err
 	}
 
@@ -202,7 +188,7 @@ func (s *AuthService) ChangePassword(ctx context.Context, userID uuid.UUID, oldP
 
 func validInput(username, email *string, password string) error {
 	if email != nil {
-		if emailRegex.Match([]byte(*email)) {
+		if !emailRegex.Match([]byte(*email)) {
 			return user.ErrInvalidArgument
 		}
 
@@ -223,7 +209,7 @@ func validInput(username, email *string, password string) error {
 		return user.ErrInvalidArgument
 	}
 
-	if len(password) < 6 || len(password) > 50 {
+	if len(trimmedPassword) < 6 || len(trimmedPassword) > 50 {
 		return fmt.Errorf("password must contain at least 6 and not more than 50 characters: %w", user.ErrInvalidArgument)
 	}
 
@@ -253,5 +239,6 @@ func generateHash(password string) (string, error) {
 
 func comparePassword(hash user.PasswordHash, password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
+
 	return err == nil
 }

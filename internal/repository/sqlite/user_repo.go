@@ -24,9 +24,9 @@ func NewUserRepo(db *db.ConnDB) *UserRepo {
 	return &UserRepo{db: db}
 }
 
-func (r *UserRepo) Create(ctx context.Context, user *domain.User) (domain.User, error) {
-	db := r.db.GetDB()
+var _ domain.UserRepository = (*UserRepo)(nil)
 
+func (r *UserRepo) Create(ctx context.Context, user *domain.User, tx *sql.Tx) (domain.User, error) {
 	query := `
 		insert into users (id, username, email, role, password_hash, visibility)
 		values (?, ?, ?, ?, ?, ?)
@@ -49,25 +49,50 @@ func (r *UserRepo) Create(ctx context.Context, user *domain.User) (domain.User, 
 
 	user.Username = strings.ToLower(strings.TrimSpace(user.Username))
 
-	err := db.QueryRowContext(ctx, query, user.ID, user.Username, user.Email, user.Role, user.PasswordHash, user.Visibility).Scan(
-		&user.ID,
-		&user.Username,
-		&user.Email,
-		&user.CreatedAt,
-		&user.UpdatedAt,
-		&user.Role,
-		&user.PasswordHash,
-		&user.Visibility,
-	)
-	if err != nil {
-		var sqlErr gosqlite3.Error
-		if errors.As(err, &sqlErr) {
-			if sqlErr.ExtendedCode == gosqlite3.ErrConstraintUnique {
-				return domain.User{}, domain.ErrUserAlreadyExists
-			}
-		}
+	if tx == nil {
+		db := r.db.GetDB()
 
-		return domain.User{}, fmt.Errorf("create user failed user_id=(%s): %w", user.ID, err)
+		err := db.QueryRowContext(ctx, query, user.ID, user.Username, user.Email, user.Role, user.PasswordHash, user.Visibility).Scan(
+			&user.ID,
+			&user.Username,
+			&user.Email,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+			&user.Role,
+			&user.PasswordHash,
+			&user.Visibility,
+		)
+		if err != nil {
+			var sqlErr gosqlite3.Error
+			if errors.As(err, &sqlErr) {
+				if sqlErr.ExtendedCode == gosqlite3.ErrConstraintUnique {
+					return domain.User{}, domain.ErrUserAlreadyExists
+				}
+			}
+
+			return domain.User{}, fmt.Errorf("create user failed user_id=(%s): %w", user.ID, err)
+		}
+	} else {
+		err := tx.QueryRowContext(ctx, query, user.ID, user.Username, user.Email, user.Role, user.PasswordHash, user.Visibility).Scan(
+			&user.ID,
+			&user.Username,
+			&user.Email,
+			&user.CreatedAt,
+			&user.UpdatedAt,
+			&user.Role,
+			&user.PasswordHash,
+			&user.Visibility,
+		)
+		if err != nil {
+			var sqlErr gosqlite3.Error
+			if errors.As(err, &sqlErr) {
+				if sqlErr.ExtendedCode == gosqlite3.ErrConstraintUnique {
+					return domain.User{}, domain.ErrUserAlreadyExists
+				}
+			}
+
+			return domain.User{}, fmt.Errorf("create user failed user_id=(%s): %w", user.ID, err)
+		}
 	}
 
 	return *user, nil

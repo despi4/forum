@@ -5,6 +5,7 @@ import (
 	"net/mail"
 	"strings"
 
+	"01.tomorrow-school.ai/git/amadiuly/forum/internal/domain/user"
 	domain "01.tomorrow-school.ai/git/amadiuly/forum/internal/domain/user"
 	"01.tomorrow-school.ai/git/amadiuly/forum/internal/service"
 	"github.com/google/uuid"
@@ -54,18 +55,9 @@ func (s *UserService) UpdateMe(ctx context.Context, id uuid.UUID, updatedUser do
 		updatedUser.Email = service.Ptr(trimmed)
 	}
 
-	user, err := s.repo.GetByID(ctx, id)
-	if err != nil {
-		return err
+	if updatedUser.PasswordHash != nil {
+		return user.ErrInvalidArgument
 	}
-
-	updatedUser.Role = service.Ptr(user.Role)
-
-	if updatedUser.Visibility == nil {
-		updatedUser.Visibility = service.Ptr(user.Visibility)
-	}
-
-	updatedUser.PasswordHash = &user.PasswordHash
 
 	return s.repo.Update(ctx, updatedUser, id)
 }
