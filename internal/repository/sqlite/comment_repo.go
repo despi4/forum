@@ -21,6 +21,8 @@ func NewCommentRepo(db *db.ConnDB) *CommentRepo {
 	return &CommentRepo{db: db}
 }
 
+var _ domain.CommentRepository = (*CommentRepo)(nil)
+
 func (r *CommentRepo) Create(ctx context.Context, comment *domain.Comment) error {
 	conn := r.db.GetDB()
 

@@ -20,6 +20,8 @@ func NewCategoryRepo(db *db.ConnDB) *CategoryRepo {
 	return &CategoryRepo{db: db}
 }
 
+var _ domain.CategoryRepository = (*CategoryRepo)(nil)
+
 func (r *CategoryRepo) List(ctx context.Context, search *string) ([]domain.Category, error) {
 	db := r.db.GetDB()
 
@@ -98,7 +100,7 @@ func (r *CategoryRepo) Create(ctx context.Context, category *domain.Category) er
 
 	return nil
 }
-func (r *CategoryRepo) Update(ctx context.Context, categoryID uuid.UUID, name string) error {
+func (r *CategoryRepo) Update(ctx context.Context, name string, categoryID uuid.UUID) error {
 	db := r.db.GetDB()
 
 	query := `

@@ -21,6 +21,8 @@ func NewPostReactionRepo(db *db.ConnDB) *PostReactionRepo {
 	return &PostReactionRepo{db: db}
 }
 
+var _ domain.PostReactionRepository = (*PostReactionRepo)(nil)
+
 func (r *PostReactionRepo) Create(ctx context.Context, reaction *domain.PostReaction) error {
 	db := r.db.GetDB()
 
@@ -153,7 +155,7 @@ func (r *PostReactionRepo) Delete(ctx context.Context, reactionID uuid.UUID) err
 	return nil
 }
 
-func (r *PostReactionRepo) Count(ctx context.Context, postID uuid.UUID) (*domain.ReactionsCount, error) {
+func (r *PostReactionRepo) Count(ctx context.Context, postID uuid.UUID) (domain.ReactionsCount, error) {
 	var reactions domain.ReactionsCount
 	conn := r.db.GetDB()
 
@@ -170,8 +172,8 @@ func (r *PostReactionRepo) Count(ctx context.Context, postID uuid.UUID) (*domain
 		&reactions.Dislikes,
 	)
 	if err != nil {
-		return nil, fmt.Errorf("get count of post reactions failed comment_id=(%s): %w", postID, err)
+		return domain.ReactionsCount{}, fmt.Errorf("get count of post reactions failed comment_id=(%s): %w", postID, err)
 	}
 
-	return &reactions, nil
+	return reactions, nil
 }

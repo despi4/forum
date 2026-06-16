@@ -22,6 +22,8 @@ func NewPostRepo(db *db.ConnDB) *PostRepo {
 	return &PostRepo{db: db}
 }
 
+var _ domain.PostRepository = (*PostRepo)(nil)
+
 func (r *PostRepo) Create(ctx context.Context, post *domain.Post) error {
 	db := r.db.GetDB()
 
