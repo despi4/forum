@@ -16,10 +16,10 @@ type CategoryRepository interface {
 }
 
 type CategoryService interface {
-	ListCategories(ctx context.Context) ([]Category, error)
+	ListCategories(ctx context.Context, search string) ([]Category, error)
 
 	// admin only
 	CreateCategory(ctx context.Context, categoryName string) error
-	UpdateCategory(ctx context.Context, categoryName string) error
+	UpdateCategory(ctx context.Context, categoryName string, categoryID uuid.UUID) error
 	DeleteCategory(ctx context.Context, id uuid.UUID) error
 }

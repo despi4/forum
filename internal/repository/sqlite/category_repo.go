@@ -82,7 +82,7 @@ func (r *CategoryRepo) Create(ctx context.Context, category *domain.Category) er
 		category.ID = uuid.New()
 	}
 
-	name := strings.ToLower(strings.TrimSpace(category.Name))
+	name := strings.TrimSpace(category.Name)
 
 	if name == "" {
 		return fmt.Errorf("category name is required")
@@ -109,7 +109,7 @@ func (r *CategoryRepo) Update(ctx context.Context, name string, categoryID uuid.
 		where id = ?;
 	`
 
-	name = strings.ToLower(strings.TrimSpace(name))
+	name = strings.TrimSpace(name)
 
 	_, err := db.ExecContext(ctx, query, categoryID, name)
 	if err != nil {
