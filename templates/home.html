@@ -1,0 +1,81 @@
+{{define "home"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    </style>
+</head>
+<body>
+    <header>
+        <nav>
+            <h2>Poka Ne Predumal Name for this shit</h2>
+
+            <div>
+                <a href="/">Home</a>
+                <a href="/profile">Profile</a>
+                <button type="submit" id="openPopup">Logout</button>
+            </div>
+        </nav>
+    </header>
+
+    <div id="popup" class="popup">
+        <div class="popup-content">
+            <h3>Are you want to logout ?</h3> 
+            <button id="logout">Yes</button>
+            <button id="closePopup">No</button> 
+        </div> 
+    </div>
+
+    <main>
+        <section class="hero">
+            <h1>Welcome!</h1>
+            <p>You are successfully logged in.</p>
+        </section>
+
+        <section class="cards">
+            <div class="card">
+                <h3>Profile</h3>
+                <p>Manage your account information.</p>
+            </div>
+
+            <div class="card">
+                <h3>Settings</h3>
+                <p>Configure your application preferences.</p>
+            </div>
+
+            <div class="card">
+                <h3>Activity</h3>
+                <p>View your recent actions and history.</p>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const popup = document.getElementById("popup")
+        const openBtn = document.getElementById("openPopup")
+        const closeBtn = document.getElementById("closePopup")
+        const logoutBtn = document.getElementByID("logout")
+
+        openBtn.addEventListener("click", () => {
+            popup.style.display = "none";
+        })
+
+        closeBtn.addEventListener("click", () => {
+            popup.style.display = "none";
+        })
+
+        popup.addEventListener("click", (e) => {
+            if (e.target == popup) {
+                popup.style.display = "none";
+            }
+        })
+
+        logoutBtn.addEventListener("click", ()=> {
+            
+        })
+    </script>
+</body>
+</html>
+{{end}}

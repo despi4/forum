@@ -47,6 +47,7 @@ func main() {
 	authSvc := authsvc.NewAuthService(sessionRepo, userRepo)
 
 	authHandler := handler.NewAuthHandler(authSvc, tmpl)
+	handler := handler.NewHandler(tmpl)
 
 	router := http.NewServeMux()
 
@@ -54,6 +55,7 @@ func main() {
 	router.HandleFunc("POST /auth/register", authHandler.Register)
 	router.HandleFunc("GET /auth/login", authHandler.LoginPage)
 	router.HandleFunc("POST /auth/login", authHandler.Login)
+	router.HandleFunc("GET /", handler.HomePage)
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
