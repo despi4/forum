@@ -24,9 +24,9 @@ type CommentReactionRepository interface {
 
 type PostReactionService interface {
 	SetPostReaction(ctx context.Context, reactionType ReactionType, userID, postID uuid.UUID) error
-	GetPostReactionByID(ctx context.Context, userID, postID uuid.UUID) (*PostReaction, error)
+	GetPostReaction(ctx context.Context, userID, postID uuid.UUID) (*PostReaction, error)
 	DeletePostReaction(ctx context.Context, userID, postID uuid.UUID) error
-	ListPostReactions(ctx context.Context, postID uuid.UUID) error
+	CountPostReactions(ctx context.Context, postID uuid.UUID) (*ReactionsCount, error)
 }
 
 type CommentReactionService interface {
