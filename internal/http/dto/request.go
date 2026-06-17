@@ -1,8 +1,8 @@
 package dto
 
 type LoginRequest struct {
-	EmailOrUsername string
-	Password        string
+	EmailOrUsername string `json:"usernameOrEmail"`
+	Password        string `json:"password"`
 }
 
 type ChangePasswordRequest struct {

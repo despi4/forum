@@ -63,6 +63,12 @@ func AuthMiddleware(authSvc domain.AuthService, next http.Handler) http.Handler 
 	})
 }
 
+func RoleMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		
+	})
+}
+
 func writeJSONError(w http.ResponseWriter, statusCode int, message string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(statusCode)

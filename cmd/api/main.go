@@ -25,6 +25,7 @@ func main() {
 	}
 
 	dsn := os.Getenv("DB_DSN")
+	port := os.Getenv("PORT")
 
 	tmpl := template.Must(template.ParseGlob(pattern))
 
@@ -51,6 +52,8 @@ func main() {
 
 	router.HandleFunc("GET /auth/register", authHandler.RegisterPage)
 	router.HandleFunc("POST /auth/register", authHandler.Register)
+	router.HandleFunc("GET /auth/login", authHandler.LoginPage)
+	router.HandleFunc("POST /auth/login", authHandler.Login)
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,
@@ -58,8 +61,8 @@ func main() {
 
 	mux := middleware.Logger(logger, router)
 
-	log.Printf("Server started on %d\n", 8080)
-	err = http.ListenAndServe(":8080", mux)
+	log.Printf("Server started on %s\n", port)
+	err = http.ListenAndServe(":"+port, mux)
 	if err != nil {
 		log.Fatal(err)
 	}
