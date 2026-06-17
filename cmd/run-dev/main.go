@@ -45,6 +45,7 @@ func ensureGo() error {
 
 	return nil
 }
+
 func ensureCompiler() (string, error) {
 	// 1. Сначала ищем в PATH
 	if path, err := exec.LookPath("gcc"); err == nil {

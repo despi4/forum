@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"html/template"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -113,24 +114,27 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	loginReq.EmailOrUsername = strings.TrimSpace(loginReq.EmailOrUsername)
+	log.Printf("LOGIN INPUT: %+v", loginReq)
+
+	loginReq.UsernameOrEmail = strings.TrimSpace(loginReq.UsernameOrEmail)
 
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
-	if strings.Contains(loginReq.EmailOrUsername, "@") {
+	if strings.Contains(loginReq.UsernameOrEmail, "@") {
 		loginInput = auth.UserInput{
-			Email:    &loginReq.EmailOrUsername,
+			Email:    &loginReq.UsernameOrEmail,
 			Password: loginReq.Password,
 		}
 	} else {
 		loginInput = auth.UserInput{
-			Username: &loginReq.EmailOrUsername,
+			Username: &loginReq.UsernameOrEmail,
 			Password: loginReq.Password,
 		}
 	}
 
 	session, err := h.authSvc.Login(ctx, &loginInput)
+	log.Print(err)
 	if err != nil {
 		h.writeJSONError(w, http.StatusUnauthorized, "Invalid email/username or password")
 		return

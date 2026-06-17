@@ -55,7 +55,7 @@ func main() {
 	router.HandleFunc("POST /auth/register", authHandler.Register)
 	router.HandleFunc("GET /auth/login", authHandler.LoginPage)
 	router.HandleFunc("POST /auth/login", authHandler.Login)
-	router.HandleFunc("GET /", handler.HomePage)
+	router.HandleFunc("GET /home", handler.HomePage)
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,

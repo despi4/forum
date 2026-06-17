@@ -5,77 +5,52 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home</title>
-    </style>
 </head>
 <body>
-    <header>
-        <nav>
-            <h2>Poka Ne Predumal Name for this shit</h2>
 
-            <div>
-                <a href="/">Home</a>
-                <a href="/profile">Profile</a>
-                <button type="submit" id="openPopup">Logout</button>
-            </div>
-        </nav>
-    </header>
+<header>
+    <nav>
+        <h2>My App</h2>
 
-    <div id="popup" class="popup">
-        <div class="popup-content">
-            <h3>Are you want to logout ?</h3> 
-            <button id="logout">Yes</button>
-            <button id="closePopup">No</button> 
-        </div> 
-    </div>
+        <div>
+            <a href="auth/login">Login</a>
+            <a href="auth/register">Register</a>
+            <a href="./home.html">Home</a>
+            <a href="./profile.html">Profile</a>
+            <button id="logoutBtn" type="button">Logout</button>
+        </div>
+    </nav>
+</header>
 
-    <main>
-        <section class="hero">
-            <h1>Welcome!</h1>
-            <p>You are successfully logged in.</p>
-        </section>
+<main>
+    <h1>Welcome!</h1>
+    <p>You are successfully logged in.</p>
+</main>
 
-        <section class="cards">
-            <div class="card">
-                <h3>Profile</h3>
-                <p>Manage your account information.</p>
-            </div>
+<script>
+const logoutBtn = document.getElementById("logoutBtn");
 
-            <div class="card">
-                <h3>Settings</h3>
-                <p>Configure your application preferences.</p>
-            </div>
+logoutBtn.addEventListener("click", async () => {
+    const confirmLogout = confirm("Are you sure you want to logout?");
 
-            <div class="card">
-                <h3>Activity</h3>
-                <p>View your recent actions and history.</p>
-            </div>
-        </section>
-    </main>
+    if (!confirmLogout) return;
 
-    <script>
-        const popup = document.getElementById("popup")
-        const openBtn = document.getElementById("openPopup")
-        const closeBtn = document.getElementById("closePopup")
-        const logoutBtn = document.getElementByID("logout")
+    try {
+        const res = await fetch("/auth/logout", {
+            method: "POST",
+        });
 
-        openBtn.addEventListener("click", () => {
-            popup.style.display = "none";
-        })
+        if (res.ok) {
+            window.location.href = "/login";
+        } else {
+            alert("Logout failed");
+        }
+    } catch (err) {
+        alert("Network error");
+    }
+});
+</script>
 
-        closeBtn.addEventListener("click", () => {
-            popup.style.display = "none";
-        })
-
-        popup.addEventListener("click", (e) => {
-            if (e.target == popup) {
-                popup.style.display = "none";
-            }
-        })
-
-        logoutBtn.addEventListener("click", ()=> {
-            
-        })
-    </script>
 </body>
 </html>
 {{end}}

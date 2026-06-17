@@ -1,81 +1,98 @@
-{{define "login"}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login</title>
 </head>
 <body>
-    <h1>Login</h1>
+  <h1>Login</h1>
 
-    <form id="loginForm">
-        <label for="usernameOrEmail">Username or Email</label><br>
-        <input
-            type="text"
-            id="usernameOrEmail"
-            name="usernameOrEmail"
-            required
-        ><br>
+  <form id="loginForm">
+    <div>
+      <label for="usernameOrEmail">Username or Email</label><br />
+      <input
+        id="usernameOrEmail"
+        name="usernameOrEmail"
+        type="text"
+        autocomplete="username"
+        required
+      />
+    </div>
 
-        <label for="password">Password</label><br>
-        <input
-            type="password"
-            id="password"
-            name="password"
-            required
-        ><br><br>
+    <div>
+      <label for="password">Password</label><br />
+      <input
+        id="password"
+        name="password"
+        type="password"
+        autocomplete="current-password"
+        required
+      />
+    </div>
 
-        <button type="submit">Submit</button>
-    </form>
+    <br />
 
-    <div id="result"></div>
+    <button type="submit">Submit</button>
+  </form>
 
-    <script>
-        const form = document.getElementById("loginForm");
-        const resultDiv = document.getElementById("result");
+  <p id="errorMessage" style="color: red;"></p>
 
-        form.addEventListener("submit", async (e) => {
-            e.preventDefault();
+  <script>
+    const form = document.getElementById("loginForm");
+    const errorMessage = document.getElementById("errorMessage");
 
-            const userData = {
-                emailOrUsername: document
-                    .getElementById("usernameOrEmail")
-                    .value
-                    .trim(),
-                password: document.getElementById("password").value
-            };
+    form.addEventListener("submit", async function (event) {
+      event.preventDefault();
 
-            try {
-                const response = await fetch("/auth/login", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(userData)
-                });
+      errorMessage.textContent = "";
 
-                const result = await response.json();
+      const usernameOrEmail = document
+        .getElementById("usernameOrEmail")
+        .value
+        .trim();
 
-                if (response.ok) {
-                    resultDiv.textContent = "Successfully signed in!";
-                    resultDiv.style.color = "green";
+      const password = document
+        .getElementById("password")
+        .value;
 
-                    setTimeout(() => {
-                        window.location.href = "/";
-                    }, 500);
-                } else {
-                    resultDiv.textContent =
-                        result.error || "Login failed.";
-                    resultDiv.style.color = "red";
-                }
-            } catch (error) {
-                resultDiv.textContent =
-                    "Unable to connect to the server.";
-                resultDiv.style.color = "red";
-            }
+      console.log("SEND LOGIN:", {
+        usernameOrEmail: usernameOrEmail,
+        password: password,
+      });
+
+      try {
+        const response = await fetch("http://localhost:8080/auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({
+            usernameOrEmail: usernameOrEmail,
+            password: password,
+          }),
         });
-    </script>
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => null);
+
+          errorMessage.textContent =
+            errorData?.error || "Invalid email/username or password";
+
+          return;
+        }
+
+        const data = await response.json().catch(() => null);
+
+        console.log("LOGIN SUCCESS:", data);
+
+        window.location.href = "/";
+      } catch (error) {
+        console.error("LOGIN ERROR:", error);
+        errorMessage.textContent = "Server connection error";
+      }
+    });
+  </script>
 </body>
 </html>
-{{end}}

@@ -3,6 +3,7 @@ package authsvc
 import (
 	"context"
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 	"time"
@@ -81,6 +82,7 @@ func (s *AuthService) Login(ctx context.Context, userInput *domain.UserInput) (d
 
 		err := validInput(userInput.Username, userInput.Email, userInput.Password)
 		if err != nil {
+			log.Print(1)
 			return domain.Session{}, user.ErrInvalidCredentials
 		}
 	} else if userInput.Username != nil && userInput.Email == nil {
@@ -91,11 +93,13 @@ func (s *AuthService) Login(ctx context.Context, userInput *domain.UserInput) (d
 			return domain.Session{}, user.ErrInvalidCredentials
 		}
 	} else {
+		log.Print(3)
 		return domain.Session{}, user.ErrInvalidCredentials
 	}
 
 	foundUser, err := s.findUserByEmailOrUsername(ctx, userInput)
 	if err != nil {
+		log.Print(4)
 		return domain.Session{}, user.ErrInvalidCredentials
 	}
 
@@ -104,6 +108,7 @@ func (s *AuthService) Login(ctx context.Context, userInput *domain.UserInput) (d
 	}
 
 	if !comparePassword(foundUser.PasswordHash, userInput.Password) {
+		log.Print(5)
 		return domain.Session{}, user.ErrInvalidCredentials
 	}
 
