@@ -361,7 +361,7 @@ func buildUpdateUserQuery(params domain.UserUpdate, id uuid.UUID) (string, []any
 		q.AddSet("visibility = ?", *params.Visibility)
 	}
 
-	if params.Visibility != nil {
+	if params.PasswordHash != nil {
 		q.AddSet("password_hash = ?", *params.PasswordHash)
 	}
 

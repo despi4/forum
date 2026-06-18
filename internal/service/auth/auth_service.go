@@ -157,23 +157,23 @@ func (s *AuthService) ValidateSession(ctx context.Context, sessionID uuid.UUID) 
 	return *session, nil
 }
 
-func (s *AuthService) ChangePassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error {
+func (s *AuthService) ChangePassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) (domain.Session, error) {
 	foundUser, err := s.userRepo.GetByID(ctx, userID)
 	if err != nil {
-		return err
+		return domain.Session{}, err
 	}
 
 	if err := validInput(nil, nil, newPassword); err != nil {
-		return err
+		return domain.Session{}, err
 	}
 
 	if !comparePassword(foundUser.PasswordHash, oldPassword) {
-		return user.ErrInvalidCredentials
+		return domain.Session{}, user.ErrInvalidCredentials
 	}
 
 	passwordHash, err := generateHash(newPassword)
 	if err != nil {
-		return err
+		return domain.Session{}, err
 	}
 
 	newPasswordHash := user.PasswordHash(passwordHash)
@@ -183,14 +183,26 @@ func (s *AuthService) ChangePassword(ctx context.Context, userID uuid.UUID, oldP
 	}
 
 	if err := s.userRepo.Update(ctx, updatePassword, foundUser.ID); err != nil {
-		return err
+		return domain.Session{}, err
 	}
 
 	if err := s.sessionRepo.DeleteAllUserSessions(ctx, userID); err != nil {
-		return err
+		return domain.Session{}, err
 	}
 
-	return nil
+	now := time.Now().UTC()
+
+	session := domain.Session{
+		UserID:     foundUser.ID,
+		LastSeenAt: now,
+		ExpiresAt:  now.Add(sessionDuration),
+	}
+
+	if err := s.sessionRepo.Create(ctx, &session, nil); err != nil {
+		return domain.Session{}, err
+	}
+
+	return session, nil
 }
 
 // ============== Private helper methods ==============

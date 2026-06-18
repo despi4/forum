@@ -25,5 +25,5 @@ type AuthService interface {
 	Login(ctx context.Context, userInput *UserInput) (Session, error)
 	Logout(ctx context.Context, sessionID uuid.UUID) error
 	ValidateSession(ctx context.Context, sessionID uuid.UUID) (Session, error)
-	ChangePassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) error
+	ChangePassword(ctx context.Context, userID uuid.UUID, oldPassword, newPassword string) (Session, error)
 }

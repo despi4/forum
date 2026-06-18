@@ -25,7 +25,7 @@
     </div>
 
     <div>
-        <label for="oldPassword2">Old Passwrod</label><br />
+        <label for="oldPassword2">Old Password</label><br />
       <input
         id="oldPassword2"
         name="oldPassword2"
@@ -73,11 +73,9 @@
                 .getElementById("oldPassword2")
                 .value;
 
-            if (oldPassword != oldPassword2) {
-                const errorData = await response.json().catch(() => null);
-
-                errorMessage.textContent =
-                    errorData?.error || "Error: Old Passwords not the same";
+            if (oldPassword !== oldPassword2) {
+                errorMessage.textContent = "Old passwords are not the same";
+                return;
             }
 
             const newPassword = document
@@ -90,7 +88,7 @@
             });
 
             try {
-                const res = await fetch("/profile", {
+                const response = await fetch("/profile/change-password", {
                     method: "PUT",
                     headers: {
                         "Content-Type": "application/json",
@@ -105,18 +103,30 @@
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => null);
 
-                    errorMessage.textContent =
-                        errorData?.error || "Invalid password";
+                    if (errorData?.error === "change password failed") {
+                        if (length(newPassword) < 6) {
+                            errorMessage.textContent = "password must have at least 6 characters";
+                        } else if (length(newPassword) > 50) {
+                            errorMessage.textContent = "password must have not more than 50 characters";
+                        }
+                        return;
+                    }
 
+                    if (errorData?.error === "invalid argument") {
+                        errorMessage.textContent = "New password is invalid";
+                        return;
+                    }
+
+                    errorMessage.textContent = errorData?.error || "Something went wrong";
                     return;
                 } else {
-                    successMessage.textContent = "password changed"
+                    successMessage.textContent = "password changed";
                 }
 
                 const data = await response.json().catch(() => null);
 
                 console.log("CHANGE PASSWORD SUCCESS:", data);
-            } catch {
+            } catch (error) {
                 console.error("ERROR:", error);
                 errorMessage.textContent = "Server connection error";
             }

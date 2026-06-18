@@ -205,23 +205,25 @@ func (h *AuthHandler) ChangePassword(w http.ResponseWriter, r *http.Request) {
 	ctx, cancel := context.WithTimeout(r.Context(), 10*time.Second)
 	defer cancel()
 
-	err := h.authSvc.ChangePassword(ctx, userID, changePasswordReq.OldPassword, changePasswordReq.NewPassword)
+	session, err := h.authSvc.ChangePassword(ctx, userID, changePasswordReq.OldPassword, changePasswordReq.NewPassword)
 	if err != nil {
 		h.writeJSONError(w, http.StatusBadRequest, "change password failed")
 		return
 	}
 
-	http.SetCookie(w, &http.Cookie{
+	var cookie http.Cookie = http.Cookie{
 		Name:     "session_id",
-		Value:    "",
+		Value:    session.ID.String(),
 		Path:     "/",
-		MaxAge:   -1,
+		Expires:  session.ExpiresAt,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
-	})
+	}
+
+	http.SetCookie(w, &cookie)
 
 	h.writeJSON(w, http.StatusOK, map[string]any{
-		"message": "password changed successfully, please login again",
+		"message": "password changed successfully",
 	})
 }
 
