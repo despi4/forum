@@ -30,3 +30,5 @@ working with db sqlite3, auth, and etc.
 Auth in the forum based on sessions
 
 ![session-picture](./pictures/session.png)
+
+## bla bla bla
