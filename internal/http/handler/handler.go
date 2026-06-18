@@ -29,3 +29,7 @@ func (h *Handler) HomePage(w http.ResponseWriter, r *http.Request) {
 
 	render.Render(w, "home", data, nil, h.tmpl)
 }
+
+func (h *Handler) ProfilePage(w http.ResponseWriter, r *http.Request) {
+	render.Render(w, "profile", nil, nil, h.tmpl)
+}

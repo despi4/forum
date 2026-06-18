@@ -57,6 +57,8 @@ func main() {
 	router.HandleFunc("POST /auth/login", authHandler.Login)
 	router.Handle("GET /home", middleware.AuthMiddleware(authSvc, http.HandlerFunc(handler.HomePage), true))
 	router.Handle("POST /auth/logout", middleware.AuthMiddleware(authSvc, http.HandlerFunc(authHandler.Logout), false))
+	router.HandleFunc("GET /profile", handler.ProfilePage)
+	// router.HandleFunc("PUT /profile")
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,

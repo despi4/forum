@@ -4,77 +4,123 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>My Profile</title>
 </head>
 <body>
-    <h1>Login</h1>
+    <h1>HackMe</h1>
+    <p>Pfp: </p>
+    <p>Username: </p>
+    <p>Email: </p>
 
-    <form id="loginForm">
-        <label for="usernameOrEmail">Username or Email</label><br>
-        <input
-            type="text"
-            id="usernameOrEmail"
-            name="usernameOrEmail"
-            required
-        ><br>
+    <form id="changePasswordForm">
+    <div>
+      <label for="oldPassword">Old Password</label><br />
+      <input
+        id="oldPassword"
+        name="oldPassword"
+        type="password"
+        autocomplete="current-password"
+        required
+      />
+    </div>
 
-        <label for="password">Password</label><br>
-        <input
-            type="password"
-            id="password"
-            name="password"
-            required
-        ><br><br>
+    <div>
+        <label for="oldPassword2">Old Passwrod</label><br />
+      <input
+        id="oldPassword2"
+        name="oldPassword2"
+        type="password"
+        autocomplete="current-password"
+        required
+      />
+    </div>
 
-        <button type="submit">Submit</button>
+    <div>
+      <label for="newPassword">New Password</label><br />
+      <input
+        id="newPassword"
+        name="newPassword"
+        type="password"
+        autocomplete="current-password"
+        required
+      />
+    </div>
+
+    <br/>
+
+    <button type="submit">Change Password</button>
     </form>
+    <p id="successMessage" style="color: green;"></p>
 
-    <div id="result"></div>
+    <p id="errorMessage" style="color: red;"></p>
 
     <script>
-        const form = document.getElementById("loginForm");
-        const resultDiv = document.getElementById("result");
+        const form = document.getElementById("changePasswordForm");
+        const errorMessage = document.getElementById("errorMessage");
+        const successMessage = document.getElementById("successMessage");
 
-        form.addEventListener("submit", async (e) => {
-            e.preventDefault();
+        form.addEventListener("submit", async function (event) {
+            event.preventDefault();
 
-            const userData = {
-                usernameOrEmail: document
-                    .getElementById("usernameOrEmail")
-                    .value
-                    .trim(),
-                password: document.getElementById("password").value
-            };
+            errorMessage.textContent = "";
+            successMessage.textContent = "";
+
+            const oldPassword = document
+                .getElementById("oldPassword")
+                .value;
+            
+            const oldPassword2 = document
+                .getElementById("oldPassword2")
+                .value;
+
+            if (oldPassword != oldPassword2) {
+                const errorData = await response.json().catch(() => null);
+
+                errorMessage.textContent =
+                    errorData?.error || "Error: Old Passwords not the same";
+            }
+
+            const newPassword = document
+                .getElementById("newPassword")
+                .value;
+
+            console.log("CHANGE PASSWORD:", {
+                oldPassword: oldPassword,
+                newPassword: newPassword,
+            });
 
             try {
-                const response = await fetch("/auth/login", {
-                    method: "POST",
+                const res = await fetch("/profile", {
+                    method: "PUT",
                     headers: {
-                        "Content-Type": "application/json"
+                        "Content-Type": "application/json",
                     },
-                    body: JSON.stringify(userData)
+                    credentials: "include",
+                    body: JSON.stringify({
+                        oldPassword: oldPassword,
+                        newPassword: newPassword,
+                    }),
                 });
 
-                const result = await response.json();
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => null);
 
-                if (response.ok) {
-                    resultDiv.textContent = "Successfully signed in!";
-                    resultDiv.style.color = "green";
+                    errorMessage.textContent =
+                        errorData?.error || "Invalid password";
 
-                    setTimeout(() => {
-                        window.location.href = "/";
-                    }, 500);
+                    return;
                 } else {
-                    resultDiv.textContent =
-                        result.error || "Login failed.";
-                    resultDiv.style.color = "red";
+                    successMessage.textContent = "password changed"
                 }
-            } catch (error) {
-                resultDiv.textContent =
-                    "Unable to connect to the server.";
-                resultDiv.style.color = "red";
+
+                const data = await response.json().catch(() => null);
+
+                console.log("CHANGE PASSWORD SUCCESS:", data);
+            } catch {
+                console.error("ERROR:", error);
+                errorMessage.textContent = "Server connection error";
             }
-        });
+        })
     </script>
 </body>
 </html>
