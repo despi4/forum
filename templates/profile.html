@@ -1,4 +1,4 @@
-{{define "login"}}
+{{define "profile"}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -39,7 +39,7 @@
             e.preventDefault();
 
             const userData = {
-                emailOrUsername: document
+                usernameOrEmail: document
                     .getElementById("usernameOrEmail")
                     .value
                     .trim(),

@@ -51,11 +51,12 @@ func main() {
 
 	router := http.NewServeMux()
 
-	router.HandleFunc("GET /auth/register", authHandler.RegisterPage)
+	router.Handle("GET /auth/register", middleware.GuestMiddleware(authSvc, http.HandlerFunc(authHandler.RegisterPage)))
 	router.HandleFunc("POST /auth/register", authHandler.Register)
-	router.HandleFunc("GET /auth/login", authHandler.LoginPage)
+	router.Handle("GET /auth/login", middleware.GuestMiddleware(authSvc, http.HandlerFunc(authHandler.LoginPage)))
 	router.HandleFunc("POST /auth/login", authHandler.Login)
-	router.HandleFunc("GET /home", handler.HomePage)
+	router.Handle("GET /home", middleware.AuthMiddleware(authSvc, http.HandlerFunc(handler.HomePage), true))
+	router.Handle("POST /auth/logout", middleware.AuthMiddleware(authSvc, http.HandlerFunc(authHandler.Logout), false))
 
 	logger := slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
 		Level: slog.LevelInfo,

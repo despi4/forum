@@ -1,3 +1,4 @@
+{{define "login"}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6,7 +7,8 @@
   <title>Login</title>
 </head>
 <body>
-  <h1>Login</h1>
+  <h1><a href="/home">HackMe</a></h1>
+  <h2>Login</h2>
 
   <form id="loginForm">
     <div>
@@ -62,7 +64,7 @@
       });
 
       try {
-        const response = await fetch("http://localhost:8080/auth/login", {
+        const response = await fetch("/auth/login", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -81,13 +83,13 @@
             errorData?.error || "Invalid email/username or password";
 
           return;
+        } else {
+          window.location.href = "/home";
         }
 
         const data = await response.json().catch(() => null);
 
         console.log("LOGIN SUCCESS:", data);
-
-        window.location.href = "/";
       } catch (error) {
         console.error("LOGIN ERROR:", error);
         errorMessage.textContent = "Server connection error";
@@ -96,3 +98,4 @@
   </script>
 </body>
 </html>
+{{end}}

@@ -1,81 +1,60 @@
-{{define "login"}}
+{{define "post"}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login</title>
+    <title>Create Post</title>
 </head>
 <body>
-    <h1>Login</h1>
+    <h1>Create Post</h1>
 
-    <form id="loginForm">
-        <label for="usernameOrEmail">Username or Email</label><br>
-        <input
-            type="text"
-            id="usernameOrEmail"
-            name="usernameOrEmail"
-            required
-        ><br>
+    <form id="postForm" method="post" action="/posts">
+        <div>
+            <label for="title">Title</label><br>
+            <input
+                type="text"
+                id="title"
+                name="title"
+                minlength="5"
+                maxlength="50"
+                required
+            >
+        </div>
 
-        <label for="password">Password</label><br>
-        <input
-            type="password"
-            id="password"
-            name="password"
-            required
-        ><br><br>
+        <br>
 
-        <button type="submit">Submit</button>
+        <div>
+            <label for="categoryId">Category ID</label><br>
+            <input
+                type="text"
+                id="categoryId"
+                name="categoryId"
+                required
+            >
+        </div>
+
+        <br>
+
+        <div>
+            <label for="content">Content</label><br>
+            <textarea
+                id="content"
+                name="content"
+                minlength="10"
+                maxlength="400"
+                rows="8"
+                cols="50"
+                required
+            ></textarea>
+        </div>
+
+        <br>
+
+        <button type="submit">Create</button>
     </form>
 
-    <div id="result"></div>
-
-    <script>
-        const form = document.getElementById("loginForm");
-        const resultDiv = document.getElementById("result");
-
-        form.addEventListener("submit", async (e) => {
-            e.preventDefault();
-
-            const userData = {
-                emailOrUsername: document
-                    .getElementById("usernameOrEmail")
-                    .value
-                    .trim(),
-                password: document.getElementById("password").value
-            };
-
-            try {
-                const response = await fetch("/auth/login", {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(userData)
-                });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    resultDiv.textContent = "Successfully signed in!";
-                    resultDiv.style.color = "green";
-
-                    setTimeout(() => {
-                        window.location.href = "/";
-                    }, 500);
-                } else {
-                    resultDiv.textContent =
-                        result.error || "Login failed.";
-                    resultDiv.style.color = "red";
-                }
-            } catch (error) {
-                resultDiv.textContent =
-                    "Unable to connect to the server.";
-                resultDiv.style.color = "red";
-            }
-        });
-    </script>
+    <p><a href="/home">Back to home</a></p>
 </body>
 </html>
 {{end}}

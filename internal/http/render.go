@@ -1,4 +1,4 @@
-package handler
+package http
 
 import (
 	"html/template"
@@ -12,9 +12,15 @@ type ErrorData struct {
 	StatusCode string
 }
 
-func Render(w http.ResponseWriter, name string, errData *ErrorData, tmpl *template.Template) {
+func Render(w http.ResponseWriter, name string, data map[string]any, errData *ErrorData, tmpl *template.Template) {
 	if errData != nil {
 		tmpl.Execute(w, errData)
+		return
+	}
+
+	if data != nil {
+		tmpl.ExecuteTemplate(w, name, data)
+		return
 	}
 
 	err := tmpl.ExecuteTemplate(w, name, nil)

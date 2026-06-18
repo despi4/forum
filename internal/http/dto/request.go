@@ -1,6 +1,6 @@
 package dto
 
-type LoginRequest struct {
+type SingInRequest struct {
 	UsernameOrEmail string `json:"usernameOrEmail"`
 	Password        string `json:"password"`
 }

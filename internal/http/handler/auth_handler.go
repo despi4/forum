@@ -12,6 +12,7 @@ import (
 	"01.tomorrow-school.ai/git/amadiuly/forum/internal/domain/auth"
 	svc "01.tomorrow-school.ai/git/amadiuly/forum/internal/domain/auth"
 	"01.tomorrow-school.ai/git/amadiuly/forum/internal/domain/user"
+	render "01.tomorrow-school.ai/git/amadiuly/forum/internal/http"
 	"01.tomorrow-school.ai/git/amadiuly/forum/internal/http/dto"
 	"01.tomorrow-school.ai/git/amadiuly/forum/internal/http/middleware"
 	"github.com/google/uuid"
@@ -42,7 +43,7 @@ func NewAuthHandler(authSvc svc.AuthService, tmpl *template.Template) *AuthHandl
 }
 
 func (h *AuthHandler) RegisterPage(w http.ResponseWriter, r *http.Request) {
-	Render(w, "register", nil, h.tmpl)
+	render.Render(w, "register", nil, nil, h.tmpl)
 }
 
 func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
@@ -95,14 +96,14 @@ func (h *AuthHandler) Register(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) LoginPage(w http.ResponseWriter, r *http.Request) {
-	Render(w, "login", nil, h.tmpl)
+	render.Render(w, "login", nil, nil, h.tmpl)
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 
 	var (
-		loginReq   dto.LoginRequest
+		loginReq   dto.SingInRequest
 		loginInput auth.UserInput
 	)
 
@@ -159,6 +160,7 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
 	sessionID, ok := r.Context().Value(middleware.CookieIDKey).(uuid.UUID)
+	log.Println(sessionID)
 	if !ok {
 		h.writeJSONError(w, http.StatusUnauthorized, "Unauthorized")
 		return

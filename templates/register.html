@@ -6,7 +6,8 @@
     <meta charset="utf-8">
 </head>
 <body>
-    <h1>Register</h1>
+    <h1><a href="/home">HackMe</a></h1>
+    <h2>Register</h2>
 
     <form id="register">
         <label for="username">Username:</label><br>
@@ -45,7 +46,7 @@
 
         if (response.ok) {
             resDiv.innerHTML = `<p style="color:green">Регистрация успешна!</p>`;
-            window.location.href = "/";
+            window.location.href = "/home";
         } else {
             resDiv.innerHTML = `<p style="color:red">Ошибка: ${result.error}</p>`;
         }
