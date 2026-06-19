@@ -4,6 +4,7 @@ import (
 	"html/template"
 	"net/http"
 
+	"01.tomorrow-school.ai/git/amadiuly/forum/internal/domain/post"
 	render "01.tomorrow-school.ai/git/amadiuly/forum/internal/http"
 	"01.tomorrow-school.ai/git/amadiuly/forum/internal/http/middleware"
 	"github.com/google/uuid"
@@ -30,6 +31,14 @@ func (h *Handler) HomePage(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, "home", data, nil, h.tmpl)
 }
 
+func (h *Handler) Home(w http.ResponseWriter, r *http.Request) {
+
+}
+
 func (h *Handler) ProfilePage(w http.ResponseWriter, r *http.Request) {
 	render.Render(w, "profile", nil, nil, h.tmpl)
+}
+
+func filter(r *http.Request) *post.PostFilter {
+	return nil
 }
